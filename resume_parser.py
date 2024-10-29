@@ -63,22 +63,25 @@ def score_resume(parsed_text, job_criteria):
     job_role = job_criteria['role']
     chatgpt_analysis = analyze_with_chatgpt(parsed_text, job_role)
     experience_score_with_chatgpt = skill_score_with_chatgpt = 0
+    summary = ""
 
     if chatgpt_analysis:
-        # Parse ChatGPT's response for experience and skill scores
+        # Parse ChatGPT's response for experience and skill scores and summary
         try:
-            analysis_lines = chatgpt_analysis.split("\n")
-            experience_score_with_chatgpt = float(analysis_lines[0].split(":")[1].strip()) * weights['experience']
-            skill_score_with_chatgpt = float(analysis_lines[1].split(":")[1].strip()) * weights['skills']
+            lines = chatgpt_analysis.split("\n")
+            experience_score_with_chatgpt = float(lines[0].split(":")[1].strip()) * weights['experience']
+            skill_score_with_chatgpt = float(lines[1].split(":")[1].strip()) * weights['skills']
+            summary = "\n".join(lines[2:])  # The summary starts after the score lines
         except (IndexError, ValueError) as e:
             print(f"Error parsing ChatGPT output: {e}")
 
     # Total score with ChatGPT
     score_with_chatgpt = round(skill_score_with_chatgpt + experience_score_with_chatgpt + education_score, 2)
 
-    # Print both scores
+    # Print both scores and the summary
     print(f"Score without ChatGPT: {score_without_chatgpt}")
     print(f"Score with ChatGPT: {score_with_chatgpt}")
+    print("ChatGPT Summary:", summary)
 
     return score_with_chatgpt  # Returning the ChatGPT-enhanced score as the main output
 
@@ -89,11 +92,11 @@ def analyze_with_chatgpt(parsed_text, job_role):
     
     Resume Text: {parsed_text}
     
-    Provide your response in exactly this format:
+    Provide your response in this format:
     Experience_Score:0.X
     Skills_Score:0.X
-    
-    Where X is a number making each score between 0 and 1.
+
+    After providing the scores, include a short paragraph (3-5 sentences) explaining why the candidate may or may not be a good fit for this role.
     """
     try:
         response = client.chat.completions.create(
@@ -107,6 +110,7 @@ def analyze_with_chatgpt(parsed_text, job_role):
     except Exception as e:
         print(f"Error with ChatGPT analysis: {e}")
         return None
+
 
 # Test example in resume_parser.py
 if __name__ == "__main__":
