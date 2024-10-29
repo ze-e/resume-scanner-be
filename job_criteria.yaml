@@ -1,0 +1,17 @@
+job_roles:
+  - role: Data Scientist
+    skills: ["Python", "Machine Learning", "Data Analysis", "SQL"]
+    experience_keywords: ["data scientist", "data analyst", "machine learning engineer"]
+    education: "Bachelor's degree in Computer Science or related field"
+    weights:
+      skills: 0.4
+      experience: 0.4
+      education: 0.2
+  - role: Software Engineer
+    skills: ["JavaScript", "React", "Node.js", "HTML", "CSS"]
+    experience_keywords: ["software engineer", "web developer", "full-stack developer"]
+    education: "Bachelor's degree in Computer Science or related field"
+    weights:
+      skills: 0.5
+      experience: 0.3
+      education: 0.2
