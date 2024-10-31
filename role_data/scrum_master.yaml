@@ -1,0 +1,16 @@
+role: SCRUM Master
+skills:
+  - name: Agile Methodology
+    synonyms: ["Agile", "Agile Methodology"]
+  - name: SCRUM
+    synonyms: ["SCRUM", "Scrum Master"]
+  - name: Project Management
+    synonyms: ["Project Management", "PM"]
+  - name: Communication Skills
+    synonyms: ["Communication", "Interpersonal Skills"]
+experience_keywords: ["SCRUM master", "agile coach", "project manager", "product owner"]
+education: "Bachelor's degree in Project Management, Business, or related field"
+weights:
+  skills: 0.4
+  experience: 0.4
+  education: 0.2

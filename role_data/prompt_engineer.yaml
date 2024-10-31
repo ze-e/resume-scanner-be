@@ -1,0 +1,16 @@
+role: Prompt Engineer
+skills:
+  - name: Natural Language Processing
+    synonyms: ["NLP", "Natural Language Processing"]
+  - name: Machine Learning
+    synonyms: ["Machine Learning", "ML"]
+  - name: Python
+    synonyms: ["Python", "Py"]
+  - name: Prompt Engineering
+    synonyms: ["Prompt Engineering", "Prompt Design"]
+experience_keywords: ["prompt engineer", "NLP specialist", "AI engineer", "conversational AI"]
+education: "Bachelor's degree in Computer Science, Linguistics, or related field"
+weights:
+  skills: 0.4
+  experience: 0.4
+  education: 0.2

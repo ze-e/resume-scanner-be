@@ -1,0 +1,16 @@
+role: Digital Marketing Manager
+skills:
+  - name: SEO
+    synonyms: ["SEO", "Search Engine Optimization"]
+  - name: Social Media Marketing
+    synonyms: ["Social Media Marketing", "SMM"]
+  - name: Content Marketing
+    synonyms: ["Content Marketing", "Content Creation"]
+  - name: Google Analytics
+    synonyms: ["Google Analytics", "GA"]
+experience_keywords: ["digital marketing manager", "SEO specialist", "content strategist", "social media manager"]
+education: "Bachelor's degree in Marketing, Business, or related field"
+weights:
+  skills: 0.5
+  experience: 0.3
+  education: 0.2

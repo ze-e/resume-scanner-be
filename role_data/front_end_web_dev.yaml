@@ -1,0 +1,16 @@
+role: Front-End Web Developer
+skills:
+  - name: HTML
+    synonyms: ["HTML", "Hypertext Markup Language"]
+  - name: CSS
+    synonyms: ["CSS", "Cascading Style Sheets"]
+  - name: JavaScript
+    synonyms: ["JavaScript", "JS"]
+  - name: React
+    synonyms: ["React", "ReactJS"]
+experience_keywords: ["front-end developer", "web developer", "UI developer", "JavaScript developer"]
+education: "Bachelor's degree in Computer Science or related field"
+weights:
+  skills: 0.5
+  experience: 0.3
+  education: 0.2

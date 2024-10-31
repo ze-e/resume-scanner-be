@@ -88,8 +88,11 @@ def score_resume(parsed_text, job_criteria):
     print(f"Score with ChatGPT: {score_with_chatgpt}")
     print("ChatGPT Summary:", summary)
 
-    return score_with_chatgpt  # Returning the ChatGPT-enhanced score as the main output
-
+    return {
+        "score_without_chatgpt": score_without_chatgpt,
+        "score_with_chatgpt": score_with_chatgpt,
+        "summary": summary
+    }
 
 def analyze_with_chatgpt(parsed_text, job_role):
     prompt = f"""
