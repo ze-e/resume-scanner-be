@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Screening Results</title>
+</head>
+<body>
+    <h1>Screening Results for {{ job_role }}</h1>
+    <p>Resume Score: {{ score }}</p>
+    <a href="{{ url_for('index') }}">Screen Another Resume</a>
+</body>
+</html>

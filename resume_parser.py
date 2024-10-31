@@ -1,12 +1,14 @@
 from dotenv import load_dotenv
 import os
 from openai import OpenAI
+from config_loader import load_job_criteria
+from pdfminer.high_level import extract_text
+from docx import Document
 
 # Load API key from .env file
 load_dotenv()
 client = OpenAI()  # This automatically uses OPENAI_API_KEY from environment
 
-from pdfminer.high_level import extract_text
 
 def parse_pdf(file_path):
     try:
@@ -17,7 +19,6 @@ def parse_pdf(file_path):
         return None
 
 
-from docx import Document
 
 def parse_docx(file_path):
     try:
@@ -40,13 +41,17 @@ def parse_resume(file_path):
         print("Unsupported file format")
         return None
 
-from config_loader import load_job_criteria
 
 def score_resume(parsed_text, job_criteria):
     weights = job_criteria['weights']
 
-    # Skills scoring based on keyword matching
-    skill_matches = sum(1 for skill in job_criteria['skills'] if skill.lower() in parsed_text.lower())
+    # Skills scoring based on keyword matching with synonyms
+    skill_matches = 0
+    for skill in job_criteria['skills']:
+        # Check if any synonym for the skill is in the parsed text
+        if any(synonym.lower() in parsed_text.lower() for synonym in skill['synonyms']):
+            skill_matches += 1
+
     skill_score = (skill_matches / len(job_criteria['skills'])) * weights['skills']
 
     # Experience scoring based on keyword matching
@@ -85,6 +90,7 @@ def score_resume(parsed_text, job_criteria):
 
     return score_with_chatgpt  # Returning the ChatGPT-enhanced score as the main output
 
+
 def analyze_with_chatgpt(parsed_text, job_role):
     prompt = f"""
     Analyze the following resume text for a {job_role}. 
@@ -111,11 +117,23 @@ def analyze_with_chatgpt(parsed_text, job_role):
         print(f"Error with ChatGPT analysis: {e}")
         return None
 
+def screen_resume(file_path, job_criteria):
+    # Step 1: Parse the resume
+    parsed_text = parse_resume(file_path)
+    if not parsed_text:
+        print("Failed to parse the resume.")
+        return None
 
-# Test example in resume_parser.py
+    # Step 2: Score the resume (without ChatGPT and with ChatGPT)
+    print(f"Processing resume for role: {job_criteria['role']}")
+    score_with_chatgpt = score_resume(parsed_text, job_criteria)
+    return score_with_chatgpt
+
+
 if __name__ == "__main__":
-    parsed_text = parse_resume("sample_resume.pdf")
-    job_criteria = load_job_criteria()['job_roles'][0]  # Select first job role
-    if parsed_text and job_criteria:
-        score = score_resume(parsed_text, job_criteria)
-        print(f"Resume Score: {score}")
+    # Load job criteria
+    job_criteria = load_job_criteria()['job_roles'][0]  
+
+    final_score = screen_resume("sample_resume.pdf", job_criteria)
+    print(f"Final Resume Score: {final_score}")
+
