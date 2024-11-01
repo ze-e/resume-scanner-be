@@ -85,5 +85,33 @@ def get_roles():
         print(f"Error fetching roles: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/roles', methods=['POST'])
+def create_role():
+    try:
+        role_data = request.json
+        
+        # Validate required fields
+        required_fields = ['role', 'skills', 'experience_keywords', 'education', 'weights']
+        if not all(field in role_data for field in required_fields):
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        # Create filename from role name
+        filename = f"{role_data['role'].lower().replace(' ', '_')}.yaml"
+        file_path = os.path.join('role_data', filename)
+
+        # Write to YAML file
+        with open(file_path, 'w', encoding='utf-8') as file:
+            yaml.dump(role_data, file, allow_unicode=True)
+
+        # Reload job criteria
+        global job_criteria_list
+        job_criteria_list = load_job_criteria()['job_roles']
+
+        return jsonify({'message': 'Role created successfully'}), 201
+
+    except Exception as e:
+        print(f"Error creating role: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)

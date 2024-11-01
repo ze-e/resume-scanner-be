@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Button, Select, MenuItem, CircularProgress } from '@mui/material';
+import { Container, Typography, Button, Select, MenuItem, CircularProgress, TextField, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 
 function App() {
     const [file, setFile] = useState(null);
@@ -7,6 +8,18 @@ function App() {
     const [jobRoles, setJobRoles] = useState([]);
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
+    const [openRoleDialog, setOpenRoleDialog] = useState(false);
+    const [newRole, setNewRole] = useState({
+        role: '',
+        skills: [{ name: '', synonyms: [''] }],
+        experience_keywords: [''],
+        education: '',
+        weights: {
+            skills: 0.4,
+            experience: 0.4,
+            education: 0.2
+        }
+    });
     const API_BASE_URL = (() => {
         const url = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
         return url.split('#')[0].trim().replace(/\/$/, '');
@@ -82,6 +95,44 @@ function App() {
         }
     };
 
+    const handleAddSkill = () => {
+        setNewRole(prev => ({
+            ...prev,
+            skills: [...prev.skills, { name: '', synonyms: [''] }]
+        }));
+    };
+
+    const handleAddKeyword = () => {
+        setNewRole(prev => ({
+            ...prev,
+            experience_keywords: [...prev.experience_keywords, '']
+        }));
+    };
+
+    const handleSubmitNewRole = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/roles`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newRole)
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create role');
+            }
+
+            // Refresh job roles list
+            const updatedRoles = await fetch(`${API_BASE_URL}/api/roles`).then(res => res.json());
+            setJobRoles(updatedRoles);
+            setOpenRoleDialog(false);
+        } catch (error) {
+            console.error('Error creating role:', error);
+            alert('Failed to create role');
+        }
+    };
+
     return (
         <Container maxWidth="sm" style={{ marginTop: '50px' }}>
             <Typography variant="h4" gutterBottom>
@@ -143,6 +194,115 @@ function App() {
                     <Typography variant="body1">ChatGPT Summary: {result.summary}</Typography>
                 </div>
             )}
+
+            <IconButton 
+                onClick={() => setOpenRoleDialog(true)}
+                style={{ marginTop: '20px' }}
+            >
+                <AddIcon /> Add New Role
+            </IconButton>
+
+            <Dialog open={openRoleDialog} onClose={() => setOpenRoleDialog(false)} maxWidth="md" fullWidth>
+                <DialogTitle>Create New Role</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        fullWidth
+                        label="Role Name"
+                        value={newRole.role}
+                        onChange={(e) => setNewRole(prev => ({ ...prev, role: e.target.value }))}
+                        margin="normal"
+                    />
+                    
+                    {newRole.skills.map((skill, index) => (
+                        <div key={index}>
+                            <TextField
+                                fullWidth
+                                label={`Skill ${index + 1}`}
+                                value={skill.name}
+                                onChange={(e) => {
+                                    const updatedSkills = [...newRole.skills];
+                                    updatedSkills[index].name = e.target.value;
+                                    setNewRole(prev => ({ ...prev, skills: updatedSkills }));
+                                }}
+                                margin="normal"
+                            />
+                            <TextField
+                                fullWidth
+                                label="Synonyms (comma-separated)"
+                                value={skill.synonyms.join(', ')}
+                                onChange={(e) => {
+                                    const updatedSkills = [...newRole.skills];
+                                    updatedSkills[index].synonyms = e.target.value.split(',').map(s => s.trim());
+                                    setNewRole(prev => ({ ...prev, skills: updatedSkills }));
+                                }}
+                                margin="normal"
+                            />
+                        </div>
+                    ))}
+                    <Button onClick={handleAddSkill}>Add Skill</Button>
+
+                    {newRole.experience_keywords.map((keyword, index) => (
+                        <TextField
+                            key={index}
+                            fullWidth
+                            label={`Experience Keyword ${index + 1}`}
+                            value={keyword}
+                            onChange={(e) => {
+                                const updatedKeywords = [...newRole.experience_keywords];
+                                updatedKeywords[index] = e.target.value;
+                                setNewRole(prev => ({ ...prev, experience_keywords: updatedKeywords }));
+                            }}
+                            margin="normal"
+                        />
+                    ))}
+                    <Button onClick={handleAddKeyword}>Add Keyword</Button>
+
+                    <TextField
+                        fullWidth
+                        label="Education"
+                        value={newRole.education}
+                        onChange={(e) => setNewRole(prev => ({ ...prev, education: e.target.value }))}
+                        margin="normal"
+                    />
+
+                    <TextField
+                        type="number"
+                        label="Skills Weight"
+                        value={newRole.weights.skills}
+                        onChange={(e) => setNewRole(prev => ({ 
+                            ...prev, 
+                            weights: { ...prev.weights, skills: parseFloat(e.target.value) }
+                        }))}
+                        margin="normal"
+                    />
+                    <TextField
+                        type="number"
+                        label="Experience Weight"
+                        value={newRole.weights.experience}
+                        onChange={(e) => setNewRole(prev => ({ 
+                            ...prev, 
+                            weights: { ...prev.weights, experience: parseFloat(e.target.value) }
+                        }))}
+                        margin="normal"
+                    />
+                    <TextField
+                        type="number"
+                        label="Education Weight"
+                        value={newRole.weights.education}
+                        onChange={(e) => setNewRole(prev => ({ 
+                            ...prev, 
+                            weights: { ...prev.weights, education: parseFloat(e.target.value) }
+                        }))}
+                        margin="normal"
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenRoleDialog(false)}>Cancel</Button>
+                    <Button onClick={handleSubmitNewRole} variant="contained" color="primary">
+                        Create Role
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Container>
     );
 }
