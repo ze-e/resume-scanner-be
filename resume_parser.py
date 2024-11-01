@@ -84,9 +84,6 @@ def score_resume(parsed_text, job_criteria):
     score_with_chatgpt = round(skill_score_with_chatgpt + experience_score_with_chatgpt + education_score, 2)
 
     # Print both scores and the summary
-    print(f"Score without ChatGPT: {score_without_chatgpt}")
-    print(f"Score with ChatGPT: {score_with_chatgpt}")
-    print("ChatGPT Summary:", summary)
 
     return {
         "score_without_chatgpt": score_without_chatgpt,
@@ -128,7 +125,6 @@ def screen_resume(file_path, job_criteria):
         return None
 
     # Step 2: Score the resume (without ChatGPT and with ChatGPT)
-    print(f"Processing resume for role: {job_criteria['role']}")
     score_with_chatgpt = score_resume(parsed_text, job_criteria)
     return score_with_chatgpt
 
@@ -138,5 +134,4 @@ if __name__ == "__main__":
     job_criteria = load_job_criteria()['job_roles'][0]  
 
     final_score = screen_resume("sample_resume.pdf", job_criteria)
-    print(f"Final Resume Score: {final_score}")
 

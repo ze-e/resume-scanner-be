@@ -18,7 +18,6 @@ def load_job_criteria():
                     # Assuming each YAML file contains a single job role
                     combined_data['job_roles'].append(data)
         
-        print(f"Loaded job criteria: {combined_data}")
         return combined_data
     except Exception as e:
         print(f"Error loading job criteria: {str(e)}")

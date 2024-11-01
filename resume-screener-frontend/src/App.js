@@ -4,28 +4,32 @@ import { Container, Typography, Button, Select, MenuItem, CircularProgress } fro
 function App() {
     const [file, setFile] = useState(null);
     const [jobRole, setJobRole] = useState('');
-    const [jobRoles, setJobRoles] = useState([]); // State for job roles
+    const [jobRoles, setJobRoles] = useState([]);
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
-    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-    console.log('API_BASE_URL:', API_BASE_URL);
+    const API_BASE_URL = (() => {
+        const url = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+        return url.split('#')[0].trim().replace(/\/$/, '');
+    })();
 
     // Fetch job roles from the backend
     useEffect(() => {
         const fetchJobRoles = async () => {
-            console.log('Attempting to fetch roles from:', `${API_BASE_URL}/api/roles`);
             try {
-                const response = await fetch(`${API_BASE_URL}/api/roles`);
+                const url = new URL('/api/roles', API_BASE_URL).toString();
+                console.log('Fetching from URL:', url);
+                const response = await fetch(url);
                 console.log('Response status:', response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
-                console.log('Fetched roles:', data);
                 setJobRoles(data);
             } catch (error) {
                 console.error('Detailed error:', error);
                 console.error('Error stack:', error.stack);
+                console.error('Error fetching job roles:', error);
+                console.error('Current API_BASE_URL:', API_BASE_URL);
             }
         };
 
@@ -69,7 +73,6 @@ function App() {
             }
 
             const data = await response.json();
-            console.log('Response data:', data);
             setResult(data); 
         } catch (error) {
             console.error('Detailed error:', error);
