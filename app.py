@@ -1,10 +1,18 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 from resume_parser import screen_resume
 from config_loader import load_job_criteria
 from flask_cors import CORS
 import os
 import yaml
+import logging
 from werkzeug.utils import secure_filename
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
@@ -12,19 +20,21 @@ CORS(app)
 # Load job criteria once
 try:
     job_criteria_list = load_job_criteria()['job_roles']
-except (TypeError, KeyError):
-    print("Warning: Failed to load job criteria. Using empty list as fallback.")
+    logger.info("Successfully loaded job criteria")
+except (TypeError, KeyError) as e:
+    logger.warning(f"Failed to load job criteria. Using empty list as fallback. Error: {str(e)}")
     job_criteria_list = []
 
 @app.route('/')
 def index():
-    return render_template('index.html', job_criteria_list=job_criteria_list)
+    logger.info("Health check endpoint called")
+    return jsonify({"status": "healthy", "message": "Resume Scanner API is running"}), 200
 
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
     try:
-        print("Files received:", request.files)
-        print("Form data received:", request.form)
+        logger.info("Files received: %s", request.files)
+        logger.info("Form data received: %s", request.form)
         
         if 'file' not in request.files:
             return jsonify({'error': 'No file part'}), 400
@@ -43,6 +53,7 @@ def upload_file():
         # Save the file temporarily
         file_path = os.path.join('./uploads', secure_filename(file.filename))
         file.save(file_path)
+        logger.info("File saved temporarily at: %s", file_path)
 
         # Load job criteria and find matching role
         criteria = load_job_criteria()
@@ -59,6 +70,7 @@ def upload_file():
 
         # Process the resume
         final_score = screen_resume(file_path, job_criteria)
+        logger.info("Resume processed successfully for role: %s", job_role)
 
         # Delete the temporary file
         os.remove(file_path)
@@ -66,29 +78,29 @@ def upload_file():
         return jsonify(final_score)
 
     except Exception as e:
-        print(f"Error processing upload: {str(e)}")
+        logger.error("Error processing upload: %s", str(e), exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/roles', methods=['GET'])
 def get_roles():
     try:
-        print("Fetching job roles...")
+        logger.info("Fetching job roles...")
         criteria = load_job_criteria()
         if not criteria or 'job_roles' not in criteria:
             return jsonify([]), 200
             
-        # Extract just the role names from each job role object
         roles = [role.get('role') for role in criteria['job_roles'] if role.get('role')]
-        print(f"Found roles: {roles}")
+        logger.info("Found roles: %s", roles)
         return jsonify(roles)
     except Exception as e:
-        print(f"Error fetching roles: {str(e)}")
+        logger.error("Error fetching roles: %s", str(e), exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/roles', methods=['POST'])
 def create_role():
     try:
         role_data = request.json
+        logger.info("Received new role data: %s", role_data)
         
         # Validate required fields
         required_fields = ['role', 'skills', 'experience_keywords', 'education', 'weights']
@@ -102,6 +114,7 @@ def create_role():
         # Write to YAML file
         with open(file_path, 'w', encoding='utf-8') as file:
             yaml.dump(role_data, file, allow_unicode=True)
+        logger.info("Role file created at: %s", file_path)
 
         # Reload job criteria
         global job_criteria_list
@@ -110,8 +123,20 @@ def create_role():
         return jsonify({'message': 'Role created successfully'}), 201
 
     except Exception as e:
-        print(f"Error creating role: {str(e)}")
+        logger.error("Error creating role: %s", str(e), exc_info=True)
         return jsonify({'error': str(e)}), 500
 
+@app.errorhandler(Exception)
+def handle_error(error):
+    logger.error("An error occurred: %s", str(error), exc_info=True)
+    return jsonify({"error": str(error)}), 500
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    try:
+        port = int(os.environ.get('PORT', 8080))
+        logger.info("Starting application on port %s", port)
+        debug_mode = os.environ.get('FLASK_ENV') == 'development'
+        app.run(host='0.0.0.0', port=port, debug=debug_mode)
+    except Exception as e:
+        logger.error("Failed to start application: %s", str(e), exc_info=True)
+        raise
