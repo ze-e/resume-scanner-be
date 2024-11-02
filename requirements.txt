@@ -4,3 +4,4 @@ pdfminer.six
 python-docx
 flask
 flask_cors
+PyYAML
