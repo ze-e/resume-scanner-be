@@ -1,9 +1,6 @@
-docx==0.2.4
-Flask==3.0.3
-flask_cors==5.0.0
-openai==1.53.0
-pdfminer==20191125
-python-dotenv==1.0.1
-PyYAML==6.0.1
-PyYAML==6.0.2
-Werkzeug==3.1.1
+python-dotenv
+openai
+pdfminer.six
+python-docx
+flask
+flask_cors
