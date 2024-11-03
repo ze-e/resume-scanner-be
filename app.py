@@ -6,6 +6,11 @@ import os
 import yaml
 import logging
 from werkzeug.utils import secure_filename
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+import requests
+from io import BytesIO
 
 # Set up logging
 logging.basicConfig(
@@ -16,6 +21,13 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
+
+# Add Cloudinary configuration after Flask initialization
+cloudinary.config(
+    cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME'),
+    api_key = os.getenv('CLOUDINARY_API_KEY'),
+    api_secret = os.getenv('CLOUDINARY_API_SECRET')
+)
 
 # Load job criteria once
 try:
@@ -109,18 +121,26 @@ def create_role():
 
         # Create filename from role name
         filename = f"{role_data['role'].lower().replace(' ', '_')}.yaml"
-        file_path = os.path.join('role_data', filename)
-
-        # Write to YAML file
-        with open(file_path, 'w', encoding='utf-8') as file:
-            yaml.dump(role_data, file, allow_unicode=True)
-        logger.info("Role file created at: %s", file_path)
+        
+        # Convert role_data to YAML string
+        yaml_content = yaml.dump(role_data, allow_unicode=True)
+        
+        # Upload to Cloudinary
+        upload_result = cloudinary.uploader.upload(
+            BytesIO(yaml_content.encode()),
+            resource_type="raw",
+            public_id=f"role_data/{filename}",
+            folder="role_data",
+            format="yaml"
+        )
+        
+        logger.info("Role file uploaded to Cloudinary: %s", upload_result['secure_url'])
 
         # Reload job criteria
         global job_criteria_list
         job_criteria_list = load_job_criteria()['job_roles']
 
-        return jsonify({'message': 'Role created successfully'}), 201
+        return jsonify({'message': 'Role created successfully', 'url': upload_result['secure_url']}), 201
 
     except Exception as e:
         logger.error("Error creating role: %s", str(e), exc_info=True)

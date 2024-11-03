@@ -5,3 +5,4 @@ python-docx
 flask
 flask_cors
 PyYAML
+cloudinary==1.36.0

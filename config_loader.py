@@ -1,24 +1,46 @@
-import yaml
 import os
+import yaml
+import cloudinary
+import requests
+from io import StringIO
 
 def load_job_criteria():
+    data_source = os.getenv('DATA_SOURCE', 'local')  # Default to 'local' if not set
+
     try:
-        role_data_dir = 'role_data'
-        combined_data = {'job_roles': []}
-        
-        # List all YAML files in the role_data directory
-        yaml_files = [f for f in os.listdir(role_data_dir) if f.endswith('.yaml') or f.endswith('.yml')]
-        
-        # Load each YAML file and combine the data
-        for yaml_file in yaml_files:
-            file_path = os.path.join(role_data_dir, yaml_file)
-            with open(file_path, 'r', encoding='utf-8') as file:
-                data = yaml.safe_load(file)
-                if data and isinstance(data, dict):
-                    # Assuming each YAML file contains a single job role
-                    combined_data['job_roles'].append(data)
-        
-        return combined_data
+        if data_source == 'local':
+            # Load from local YAML files
+            all_roles = []
+            local_directory = 'role_data'  # Adjust this path as necessary
+            for filename in os.listdir(local_directory):
+                if filename.endswith('.yaml'):
+                    with open(os.path.join(local_directory, filename), 'r') as file:
+                        yaml_content = yaml.safe_load(file)
+                        all_roles.append(yaml_content)
+            return {'job_roles': all_roles}
+
+        elif data_source == 'cloudinary':
+            # Load from Cloudinary
+            result = cloudinary.api.resources(
+                resource_type="raw",
+                prefix="role_data/",
+                type="upload"
+            )
+
+            all_roles = []
+            for resource in result['resources']:
+                # Download each YAML file
+                response = requests.get(resource['secure_url'])
+                if response.status_code == 200:
+                    # Parse YAML content
+                    yaml_content = yaml.safe_load(StringIO(response.text))
+                    all_roles.append(yaml_content)
+
+            return {'job_roles': all_roles}
+
+        else:
+            raise ValueError("Invalid data source specified. Use 'local' or 'cloudinary'.")
+
     except Exception as e:
-        print(f"Error loading job criteria: {str(e)}")
-        return None
+        print(f"Error loading job criteria: {e}")
+        return {'job_roles': []}
