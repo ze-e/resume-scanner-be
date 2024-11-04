@@ -29,6 +29,48 @@ cloudinary.config(
     api_secret = os.getenv('CLOUDINARY_API_SECRET')
 )
 
+# Load job criteria based on the data source
+def load_job_criteria():
+    data_source = os.getenv('DATA_SOURCE', 'local')  # Default to 'local' if not set
+
+    try:
+        if data_source == 'local':
+            # Load from local YAML files
+            all_roles = []
+            local_directory = 'role_data'  # Adjust this path as necessary
+            for filename in os.listdir(local_directory):
+                if filename.endswith('.yaml'):
+                    with open(os.path.join(local_directory, filename), 'r') as file:
+                        yaml_content = yaml.safe_load(file)
+                        all_roles.append(yaml_content)
+            return {'job_roles': all_roles}
+
+        elif data_source == 'cloudinary':
+            # Load from Cloudinary
+            result = cloudinary.api.resources(
+                resource_type="raw",
+                prefix="role_data/",
+                type="upload"
+            )
+
+            all_roles = []
+            for resource in result['resources']:
+                # Download each YAML file
+                response = requests.get(resource['secure_url'])
+                if response.status_code == 200:
+                    # Parse YAML content
+                    yaml_content = yaml.safe_load(StringIO(response.text))
+                    all_roles.append(yaml_content)
+
+            return {'job_roles': all_roles}
+
+        else:
+            raise ValueError("Invalid data source specified. Use 'local' or 'cloudinary'.")
+
+    except Exception as e:
+        logger.error(f"Error loading job criteria: {e}")
+        return {'job_roles': []}
+
 # Load job criteria once
 try:
     job_criteria_list = load_job_criteria()['job_roles']
@@ -125,22 +167,33 @@ def create_role():
         # Convert role_data to YAML string
         yaml_content = yaml.dump(role_data, allow_unicode=True)
         
-        # Upload to Cloudinary
-        upload_result = cloudinary.uploader.upload(
-            BytesIO(yaml_content.encode()),
-            resource_type="raw",
-            public_id=f"role_data/{filename}",
-            folder="role_data",
-            format="yaml"
-        )
-        
-        logger.info("Role file uploaded to Cloudinary: %s", upload_result['secure_url'])
+        # Upload to Cloudinary or save locally based on data source
+        data_source = os.getenv('DATA_SOURCE', 'local')
+        if data_source == 'cloudinary':
+            # Upload to Cloudinary
+            upload_result = cloudinary.uploader.upload(
+                BytesIO(yaml_content.encode()),
+                resource_type="raw",
+                public_id=f"role_data/{filename}",
+                folder="role_data",
+                format="yaml"
+            )
+            logger.info("Role file uploaded to Cloudinary: %s", upload_result['secure_url'])
+            url = upload_result['secure_url']
+        else:
+            # Save locally
+            local_directory = 'role_data'  # Adjust this path as necessary
+            os.makedirs(local_directory, exist_ok=True)
+            with open(os.path.join(local_directory, filename), 'w') as file:
+                file.write(yaml_content)
+            logger.info("Role file saved locally: %s", filename)
+            url = f"file://{os.path.abspath(os.path.join(local_directory, filename))}"
 
         # Reload job criteria
         global job_criteria_list
         job_criteria_list = load_job_criteria()['job_roles']
 
-        return jsonify({'message': 'Role created successfully', 'url': upload_result['secure_url']}), 201
+        return jsonify({'message': 'Role created successfully', 'url': url}), 201
 
     except Exception as e:
         logger.error("Error creating role: %s", str(e), exc_info=True)
