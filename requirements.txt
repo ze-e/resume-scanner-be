@@ -2,7 +2,9 @@ python-dotenv
 openai
 pdfminer.six
 python-docx
-flask
 flask_cors
-PyYAML
 cloudinary==1.36.0
+Flask==2.0.1
+requests==2.26.0
+PyYAML==5.4.1
+werkzeug==2.0.1
