@@ -19,9 +19,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
-CORS(app)
+allowed_origins = os.getenv('ALLOWED_ORIGINS', '').split(',')
+allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip()]
 
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": ["https://resume-screener-fe.vercel.app/", "https://resume-screener-fe-ze-es-projects.vercel.app/"]}})  
 # Add Cloudinary configuration after Flask initialization
 cloudinary.config(
     cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME'),
