@@ -18,8 +18,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-allowed_origins = os.getenv('ALLOWED_ORIGINS', '').split(',')
-allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip()]
+# allowed_origins = os.getenv('ALLOWED_ORIGINS', '').split(',')
+allowed_origins = os.getenv('ALLOWED_ORIGINS', '')
+# allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip()]
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": allowed_origins}})  
