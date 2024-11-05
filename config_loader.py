@@ -11,7 +11,7 @@ def load_job_criteria():
         if data_source == 'local':
             # Load from local YAML files
             all_roles = []
-            local_directory = 'role_data'  # Adjust this path as necessary
+            local_directory = 'role_data'  
             for filename in os.listdir(local_directory):
                 if filename.endswith('.yaml'):
                     with open(os.path.join(local_directory, filename), 'r') as file:

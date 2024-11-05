@@ -10,8 +10,7 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 import requests
-from io import BytesIO
-
+from io import BytesIO, StringIO  
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
