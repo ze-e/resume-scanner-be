@@ -18,13 +18,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# allowed_origins = os.getenv('ALLOWED_ORIGINS', '').split(',')
-allowed_origins = os.getenv('ALLOWED_ORIGINS', '')
-# allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip()]
-logger.info("Allowed origins: %s", allowed_origins)
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": allowed_origins}})  
-# CORS(app)  
+CORS(app)  
+
 # Add Cloudinary configuration after Flask initialization
 cloudinary.config(
     cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME'),

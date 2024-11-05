@@ -118,13 +118,13 @@ def analyze_with_chatgpt(parsed_text, job_role):
         return None
 
 def screen_resume(file_path, job_criteria):
-    # Step 1: Parse the resume
+    # Parse the resume
     parsed_text = parse_resume(file_path)
     if not parsed_text:
         print("Failed to parse the resume.")
         return None
 
-    # Step 2: Score the resume (without ChatGPT and with ChatGPT)
+    # Score the resume (without ChatGPT and with ChatGPT)
     score_with_chatgpt = score_resume(parsed_text, job_criteria)
     return score_with_chatgpt
 
